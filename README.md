@@ -634,3 +634,11 @@ root@client1:~#
 
 ## Routes
 - [ ] Avoir des routes présentes et persistantes
+
+```
+apt install net-tools -y
+
+```
+```
+route add -net 192.168.74.214 netmask 255.255.255.255 gw 192.168.74.198
+```

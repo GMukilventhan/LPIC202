@@ -21,7 +21,7 @@
 <img width="820" alt="Capture d’écran 2023-07-05 à 23 23 29" src="https://github.com/GMukilventhan/LPIC202/assets/90500004/c54684f6-4c14-4d92-a833-13645d498c76">
 
 
-- Accéder au répertoire racine : ```bash cd / ```
+- Accéder au répertoire racine : ``` cd / ```
 - Écrire "- - -" dans le fichier /sys/class/scsi_host/host0/scan : echo "- - -" > /sys/class/scsi_host/host0/scan
 - Vérifier les informations sur le disque /dev/sdb : fdisk -l | grep sdb
 - Réinitialiser les hôtes SCSI : for host in $(ls /sys/class/scsi_host/); do echo "- - -" > /sys/class/scsi_host/${host}/scan; done

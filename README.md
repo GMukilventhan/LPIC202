@@ -611,11 +611,25 @@ touch /srv/tftp/test.txt && echo « Ceci est un test TFTP projet 4SRC2  » >> /s
 ```
 chgrp -R tftp /srv/tftp && chmod -R 755 /srv/tftp
 ```
+- Activer le serveur tftp
 ```
 systemctl start tftpd-hpa
 ```
 ```
 systemctl enable tftpd-hpa
+```
+- Test du TFTP
+```
+
+root@client1:~# tftp 192.168.73.198
+tftp> get projet.txt
+tftp> quit
+```
+```
+root@client1:~# cat projet.txt
+« Ceci est un test TFTP »
+« Ceci est un test TFTP projet 4SRC2 »
+root@client1:~#
 ```
 
 ## Routes

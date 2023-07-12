@@ -49,3 +49,25 @@
 - Créer un système de fichiers ext4 sur /dev/mapper/datavg-lv_data2 : ```mkfs.ext4 /dev/mapper/datavg-lv_data2```
 - Monter tous les systèmes de fichiers répertoriés dans /etc/fstab : ```mount -a```
 - Vérifier l'utilisation de l'espace disque : ```df -h```
+
+## NTP
+- [ ] Configurer le NTP avec plusieurs serveurs fonctionnels
+
+- Installer le package NTP : ```sudo apt-get install ntp -y```
+- Vérifier l'état du service NTP : ```sudo service ntp status```
+- Éditer le fichier de configuration NTP : ```sudo nano /etc/ntp.conf```
+- Ajouter les serveurs NTP souhaités dans le fichier /etc/ntp.conf. Par exemple :
+ ```
+ server 192.168.74.198
+ server 192.168.74.210
+ server 192.168.74.214
+```
+
+- Enregistrer les modifications et quitter l'éditeur.
+- Redémarrer le service NTP : ```sudo service ntp restart```
+- Vérifier à nouveau l'état du service NTP : ```sudo service ntp status```
+- Vérifier la synchronisation avec les serveurs NTP : ```ntpq -pn```
+- Vérifier les informations de date et d'heure : ```timedatectl```
+
+ ## IPTABLES
+- [ ] Configurer iptables avec les règles nécessaires, l’utilisation de chaîne et la policy de « INPUT » à DROP

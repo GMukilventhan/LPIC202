@@ -61,28 +61,154 @@ fdisk /dev/sdb
    ```
   /dev/mapper/datavg-lv_data /data ext4 defaults 0 2
    ``` 
-- Afficher les informations sur les groupes de volumes : ```vgs```
-- Créer un nouveau groupe de volumes datavg à partir de /dev/sdb1 :``` vgcreate datavg /dev/sdb1```
-- Créer un nouveau volume logique lv_data dans le groupe de volumes datavg : ```lvcreate -l 100%FREE -n lv_data datavg```
-- Afficher les informations sur les volumes logiques : ```lvs```
-- Créer un système de fichiers ext4 sur /dev/mapper/datavg-lv_data : ```mkfs.ext4 /dev/mapper/datavg-lv_data```
-- Créer le répertoire /data : ```mkdir /data```
-- Monter tous les systèmes de fichiers répertoriés dans /etc/fstab : ```mount -a```
-- Vérifier les informations sur les blocs de stockage : ```lsblk```
-- Réduire la taille du volume logique /dev/mapper/datavg-lv_data de 10 Go : ```lvreduce -r -L -10G /dev/mapper/datavg-lv_data```
-- Éditer à nouveau le fichier /etc/fstab : ```nano /etc/fstab```
-- Ajouter l'entrée ```/dev/mapper/datavg-lv_data2 /data2 ext4 defaults 0 2 ``` dans le fichier /etc/fstab.
-- Créer le répertoire /data2 : ```mkdir /data2```
-- Créer un système de fichiers ext4 sur /dev/mapper/datavg-lv_data2 : ```mkfs.ext4 /dev/mapper/datavg-lv_data2```
-- Monter tous les systèmes de fichiers répertoriés dans /etc/fstab : ```mount -a```
-- Vérifier l'utilisation de l'espace disque : ```df -h```
+- Afficher les informations sur les groupes de volumes :
+  ```
+  vgs
+  ```
+  ```
+  root@client1:~#   vgs
+  VG        #PV #LV #SN Attr   VSize   VFree 
+  datavg      1   1   0 wz--n- <60,00g     0 
+  ubuntu-vg   1  10   0 wz--n- <28,00g <3,84g
+   ```
+- Créer un nouveau groupe de volumes datavg à partir de /dev/sdb1 :
+  ```
+   vgcreate datavg /dev/sdb1
+  ```
+- Créer un nouveau volume logique lv_data dans le groupe de volumes datavg :
+   ```
+  lvcreate -l 100%FREE -n lv_data datavg
+   ```
+- Afficher les informations sur les volumes logiques :
+  ```
+  lvs
+  ```
+  ```
+  root@srv1:~# lvs
+  LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  lv_data   datavg    -wi-ao---- <50,00g                                                    
+  lv_data2  datavg    -wi-ao----  10,00g                                                    
+  lv_home   ubuntu-vg -wi-ao----   1,50g                                                    
+  lv_opt    ubuntu-vg -wi-ao---- 400,00m                                                    
+  lv_proc   ubuntu-vg -wi-a-----   2,00g                                                    
+  lv_root   ubuntu-vg -wi-ao----   4,00g                                                    
+  lv_srv    ubuntu-vg -wi-ao---- 500,00m                                                    
+  lv_tmp    ubuntu-vg -wi-ao---- 800,00m                                                    
+  lv_usr    ubuntu-vg -wi-ao----   5,00g                                                    
+  lv_var    ubuntu-vg -wi-ao----   4,00g                                                    
+  lv_varlog ubuntu-vg -wi-ao----   5,00g                                                    
+  lv_vartmp ubuntu-vg -wi-ao----   1,00g
+  ```                                                  
+root@srv1:~# 
+- Créer un système de fichiers ext4 sur /dev/mapper/datavg-lv_data :
+  ```
+  mkfs.ext4 /dev/mapper/datavg-lv_data
+  ```
+- Créer le répertoire /data :
+  ```
+  mkdir /data
+  ```
+- Monter tous les systèmes de fichiers répertoriés dans /etc/fstab :
+  ```
+  mount -a
+  ```
+- Vérifier les informations sur les blocs de stockage :
+  ```
+  lsblk
+  ```
+```
+  root@srv1:~#  lsblk
+NAME                     MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0                      7:0    0 111,9M  1 loop /snap/lxd/24322
+loop1                      7:1    0  63,3M  1 loop /snap/core20/1822
+loop2                      7:2    0  63,4M  1 loop /snap/core20/1974
+loop3                      7:3    0  49,8M  1 loop /snap/snapd/18357
+loop4                      7:4    0  53,3M  1 loop /snap/snapd/19457
+sda                        8:0    0    30G  0 disk 
+├─sda1                     8:1    0     1M  0 part 
+├─sda2                     8:2    0     2G  0 part /boot
+└─sda3                     8:3    0    28G  0 part 
+  ├─ubuntu--vg-lv_root   253:2    0     4G  0 lvm  /
+  ├─ubuntu--vg-lv_usr    253:3    0     5G  0 lvm  /usr
+  ├─ubuntu--vg-lv_var    253:4    0     4G  0 lvm  /var
+  ├─ubuntu--vg-lv_tmp    253:5    0   800M  0 lvm  /tmp
+  ├─ubuntu--vg-lv_opt    253:6    0   400M  0 lvm  /opt
+  ├─ubuntu--vg-lv_home   253:7    0   1,5G  0 lvm  /home
+  ├─ubuntu--vg-lv_varlog 253:8    0     5G  0 lvm  /var/log
+  ├─ubuntu--vg-lv_srv    253:9    0   500M  0 lvm  /srv
+  ├─ubuntu--vg-lv_vartmp 253:10   0     1G  0 lvm  /var/tmp
+  └─ubuntu--vg-lv_proc   253:11   0     2G  0 lvm  
+sdb                        8:16   0    60G  0 disk 
+└─sdb1                     8:17   0    60G  0 part 
+  ├─datavg-lv_data       253:0    0    50G  0 lvm  /data
+  └─datavg-lv_data2      253:1    0    10G  0 lvm  /data2
+sr0                       11:0    1   1,8G  0 rom
+```
+- Réduire la taille du volume logique /dev/mapper/datavg-lv_data de 10 Go :
+  ```
+  lvreduce -r -L -10G /dev/mapper/datavg-lv_data
+  ```
+- Éditer à nouveau le fichier /etc/fstab :
+  ```
+  nano /etc/fstab
+  ```
+- Ajouter l'entrée dans le fichier /etc/fstab:
+   ```
+  /dev/mapper/datavg-lv_data2 /data2 ext4 defaults 0 2
+   ```
+- Créer le répertoire /data2 :
+  ```
+  mkdir /data2
+  ```
+- Créer un système de fichiers ext4 sur /dev/mapper/datavg-lv_data2 :
+  ```
+  mkfs.ext4 /dev/mapper/datavg-lv_data2
+  ```
+- Monter tous les systèmes de fichiers répertoriés dans /etc/fstab :
+  ```
+  mount -a
+  ```
+- Vérifier l'utilisation de l'espace disque :
+  ```
+  df -h
+  ```
+```
+  root@srv1:~#   df -h
+Filesystem                                                                                    Size  Used Avail Use% Mounted on
+tmpfs                                                                                         388M  1,7M  387M   1% /run
+/dev/mapper/ubuntu--vg-lv_root                                                                3,9G  6,1M  3,7G   1% /
+/dev/disk/by-id/dm-uuid-LVM-faX53WXMuCG6nsPm1NdAQZRRl4ZoT6a0Dl3AL5GU38HuLTH2YsO2CttpKcxCBW77  4,9G  2,3G  2,3G  51% /usr
+tmpfs                                                                                         1,9G     0  1,9G   0% /dev/shm
+tmpfs                                                                                         5,0M     0  5,0M   0% /run/lock
+/dev/sda2                                                                                     2,0G  130M  1,7G   8% /boot
+/dev/mapper/ubuntu--vg-lv_home                                                                1,5G   64K  1,4G   1% /home
+/dev/mapper/ubuntu--vg-lv_opt                                                                 359M   24K  331M   1% /opt
+/dev/mapper/ubuntu--vg-lv_var                                                                 3,9G  618M  3,1G  17% /var
+/dev/mapper/datavg-lv_data2                                                                   9,8G   24K  9,3G   1% /data2
+/dev/mapper/datavg-lv_data                                                                     49G   24K   47G   1% /data
+/dev/mapper/ubuntu--vg-lv_srv                                                                 452M   32K  417M   1% /srv
+/dev/mapper/ubuntu--vg-lv_varlog                                                              4,9G  111M  4,5G   3% /var/log
+/dev/mapper/ubuntu--vg-lv_vartmp                                                              974M   56K  907M   1% /var/tmp
+/dev/mapper/ubuntu--vg-lv_tmp                                                                 770M   76K  714M   1% /tmp
+tmpfs                                                                                         388M  4,0K  388M   1% /run/user/1000
+
+```
 
 ## NTP
 - [ ] Configurer le NTP avec plusieurs serveurs fonctionnels
 
-- Installer le package NTP : ```sudo apt-get install ntp -y```
-- Vérifier l'état du service NTP : ```sudo service ntp status```
-- Éditer le fichier de configuration NTP : ```sudo nano /etc/ntp.conf```
+- Installer le package NTP :
+  ```
+  sudo apt-get install ntp -y
+  ```
+- Vérifier l'état du service NTP :
+  ```
+  sudo service ntp status
+  ```
+- Éditer le fichier de configuration NTP :
+  ```
+  sudo vim /etc/ntp.conf
+  ```
 - Ajouter les serveurs NTP souhaités dans le fichier /etc/ntp.conf. Par exemple :
  ```
  server 192.168.74.198
@@ -91,10 +217,22 @@ fdisk /dev/sdb
 ```
 
 - Enregistrer les modifications et quitter l'éditeur.
-- Redémarrer le service NTP : ```sudo service ntp restart```
-- Vérifier à nouveau l'état du service NTP : ```sudo service ntp status```
-- Vérifier la synchronisation avec les serveurs NTP : ```ntpq -pn```
-- Vérifier les informations de date et d'heure : ```timedatectl```
+- Redémarrer le service NTP :
+  ```
+  sudo service ntp restart
+  ```
+- Vérifier à nouveau l'état du service NTP :
+  ```
+  sudo service ntp status
+  ```
+- Vérifier la synchronisation avec les serveurs NTP :
+  ```
+  ntpq -pn
+  ```
+- Vérifier les informations de date et d'heure :
+  ```
+  timedatectl
+  ```
 
  ## IPTABLES
 - [ ] Configurer iptables avec les règles nécessaires, l’utilisation de chaîne et la policy de « INPUT » à DROP

@@ -272,3 +272,82 @@ tmpfs                                                                           
   ```
  ## IPTABLES
 - [ ] Configurer iptables avec les règles nécessaires, l’utilisation de chaîne et la policy de « INPUT » à DROP
+
+Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic TCP sur le port 22, qui est le port par défaut utilisé par SSH:
+```
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+```
+
+Cette commande affiche les règles actuelles du pare-feu iptables. Dans votre cas, la politique par défaut pour toutes les chaînes (INPUT, FORWARD, OUTPUT) est ACCEPT, ce qui signifie que tout le trafic est autorisé :
+```
+iptables -L -n
+```
+```
+root@srv1:~# iptables -L -n
+Chain INPUT (policy DROP)
+target     prot opt source               destination         
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            state NEW,RELATED,ESTABLISHED
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:53
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:53
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:67
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:69
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+root@srv1:~# 
+```
+
+ Cette commande supprime toutes les règles actuelles du pare-feu iptables:
+ ```
+ sudo iptables -F
+ ```
+
+Cette commande ajoute une règle à la chaîne OUTPUT d'iptables pour accepter le trafic sortant qui est nouvellement initié, ainsi que les connexions liées et établies:
+```
+sudo iptables -A OUTPUT -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+```
+
+ Cette commande définit la politique par défaut de la chaîne INPUT sur DROP, ce qui signifie que tout le trafic entrant sera rejeté à moins qu'il ne corresponde à une règle spécifique:
+ ```
+ sudo iptables -P INPUT DROP
+```
+
+ Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP provenant du port source 53, qui est généralement utilisé pour les requêtes DNS sortantes:
+ ```
+ sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
+```
+
+ Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic TCP provenant du port source 53, qui est également utilisé pour les requêtes DNS sortantes:
+ ```
+ sudo iptables -A INPUT -p tcp --sport 53 -j ACCEPT
+```
+
+ Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP sur le port de destination 67, qui est utilisé pour les requêtes DHCP entrantes:
+ ```
+ sudo iptables -A INPUT -p udp --dport 67 -j ACCEPT
+```
+
+Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP sur le port de destination 69, qui est utilisé pour les requêtes TFTP entrantes.
+```
+sudo iptables -A INPUT -p udp --dport 69 -j ACCEPT
+```
+
+Cette commande installe le paquet iptables-persistent, qui permet d'enregistrer les règles iptables de manière persistante afin qu'elles soient restaurées au redémarrage du système.
+```
+apt-get install iptables-persistent
+```
+
+Cette commande enregistre les règles iptables actuelles dans un fichier appelé "rules.v4" situé dans le répertoire "iptables":
+```
+iptables-save > iptables/rules.v4
+```
+
+La sortie de ```iptables -L -n ```et ```nft list ruleset``` montre les règles actuelles de la table filter d'iptables et de la table filter de nftables respectivement.
+
+## PAM
+
+- [ ] Configurer PAM afin que l’utilisateur soit verrouillé pendant 600 secondes après 4 tentatives échoué

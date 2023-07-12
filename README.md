@@ -16,3 +16,5 @@
 ## Description
 <img width="1192" alt="Capture d’écran 2023-07-12 à 23 50 25" src="https://github.com/GMukilventhan/LPIC202/assets/90500004/bec69c92-e532-491a-b68b-de8cebead8a8">
 
+## LVM
+- Avoir un système de montage conforme aux recommandations ANSSI avec LVM

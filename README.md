@@ -150,7 +150,7 @@ sr0                       11:0    1   1,8G  0 rom
   ```
 - Éditer à nouveau le fichier /etc/fstab :
   ```
-  nano /etc/fstab
+  vim /etc/fstab
   ```
 - Ajouter l'entrée dans le fichier /etc/fstab:
    ```
@@ -273,12 +273,12 @@ tmpfs                                                                           
  ## IPTABLES
 - [ ] Configurer iptables avec les règles nécessaires, l’utilisation de chaîne et la policy de « INPUT » à DROP
 
-Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic TCP sur le port 22, qui est le port par défaut utilisé par SSH:
+- Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic TCP sur le port 22, qui est le port par défaut utilisé par SSH:
 ```
 sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 ```
 
-Cette commande affiche les règles actuelles du pare-feu iptables. Dans votre cas, la politique par défaut pour toutes les chaînes (INPUT, FORWARD, OUTPUT) est ACCEPT, ce qui signifie que tout le trafic est autorisé :
+- Cette commande affiche les règles actuelles du pare-feu iptables. Dans votre cas, la politique par défaut pour toutes les chaînes (INPUT, FORWARD, OUTPUT) est ACCEPT, ce qui signifie que tout le trafic est autorisé :
 ```
 iptables -L -n
 ```
@@ -301,53 +301,322 @@ target     prot opt source               destination
 root@srv1:~# 
 ```
 
- Cette commande supprime toutes les règles actuelles du pare-feu iptables:
+ - Cette commande supprime toutes les règles actuelles du pare-feu iptables:
  ```
  sudo iptables -F
  ```
 
-Cette commande ajoute une règle à la chaîne OUTPUT d'iptables pour accepter le trafic sortant qui est nouvellement initié, ainsi que les connexions liées et établies:
+- Cette commande ajoute une règle à la chaîne OUTPUT d'iptables pour accepter le trafic sortant qui est nouvellement initié, ainsi que les connexions liées et établies:
 ```
 sudo iptables -A OUTPUT -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 ```
 
- Cette commande définit la politique par défaut de la chaîne INPUT sur DROP, ce qui signifie que tout le trafic entrant sera rejeté à moins qu'il ne corresponde à une règle spécifique:
+- Cette commande définit la politique par défaut de la chaîne INPUT sur DROP, ce qui signifie que tout le trafic entrant sera rejeté à moins qu'il ne corresponde à une règle spécifique:
  ```
  sudo iptables -P INPUT DROP
 ```
 
- Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP provenant du port source 53, qui est généralement utilisé pour les requêtes DNS sortantes:
+ - Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP provenant du port source 53, qui est généralement utilisé pour les requêtes DNS sortantes:
  ```
  sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
 ```
 
- Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic TCP provenant du port source 53, qui est également utilisé pour les requêtes DNS sortantes:
+ - Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic TCP provenant du port source 53, qui est également utilisé pour les requêtes DNS sortantes:
  ```
  sudo iptables -A INPUT -p tcp --sport 53 -j ACCEPT
 ```
 
- Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP sur le port de destination 67, qui est utilisé pour les requêtes DHCP entrantes:
+ - Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP sur le port de destination 67, qui est utilisé pour les requêtes DHCP entrantes:
  ```
  sudo iptables -A INPUT -p udp --dport 67 -j ACCEPT
 ```
 
-Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP sur le port de destination 69, qui est utilisé pour les requêtes TFTP entrantes.
+- Cette commande ajoute une règle à la chaîne INPUT d'iptables pour accepter le trafic UDP sur le port de destination 69, qui est utilisé pour les requêtes TFTP entrantes.
 ```
 sudo iptables -A INPUT -p udp --dport 69 -j ACCEPT
 ```
 
-Cette commande installe le paquet iptables-persistent, qui permet d'enregistrer les règles iptables de manière persistante afin qu'elles soient restaurées au redémarrage du système.
+- Cette commande installe le paquet iptables-persistent, qui permet d'enregistrer les règles iptables de manière persistante afin qu'elles soient restaurées au redémarrage du système.
 ```
 apt-get install iptables-persistent
 ```
 
-Cette commande enregistre les règles iptables actuelles dans un fichier appelé "rules.v4" situé dans le répertoire "iptables":
+- Cette commande enregistre les règles iptables actuelles dans un fichier appelé "rules.v4" situé dans le répertoire "iptables":
 ```
 iptables-save > iptables/rules.v4
 ```
 
-La sortie de ```iptables -L -n ```et ```nft list ruleset``` montre les règles actuelles de la table filter d'iptables et de la table filter de nftables respectivement.
+- La sortie de ```iptables -L -n ```et ```nft list ruleset``` montre les règles actuelles de la table filter d'iptables et de la table filter de nftables respectivement.
 
 ## PAM
 
 - [ ] Configurer PAM afin que l’utilisateur soit verrouillé pendant 600 secondes après 4 tentatives échoué
+
+- Editer le fichier
+```
+vim /etc/pam.d/common-auth
+```
+```
+# faillock
+auth    required pam_faillock.so preauth audit deny=4 unlock_time=600
+
+# here are the per-package modules (the "Primary" block)
+auth    [success=1 default=ignore]      pam_unix.so nullok
+
+# faillock
+auth [default=die] pam_faillock.so authfail audit deny=4 fail_interval=60 unlock_time=600
+auth sufficient pam_faillock.so authsucc audit deny=4 fail_interval=60 unlock_time=600
+
+# here's the fallback if no module succeeds
+auth    requisite                       pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+auth    required                        pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+auth    optional                        pam_cap.so
+# end of pam-auth-update config
+```
+- Ajouter cette ligne  ```account required pam_faillock.so``` à la fin du fichier
+```
+vim /etc/pam.d/common-account
+```
+```
+# here are the per-package modules (the "Primary" block)
+account [success=1 new_authtok_reqd=done default=ignore]        pam_unix.so
+# here's the fallback if no module succeeds
+account requisite                       pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+account required                        pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+# end of pam-auth-update config
+#
+account required pam_faillock.so
+```
+- La commande « faillock » permet aussi de pouvoir consulter le nombre de tentative de connexion :
+```
+root@srv1:~# faillock --user mukil
+mukil:
+When                Type  Source                                           Valid
+2023-07-12 22:59:06 RHOST 192.168.74.1                                         V
+2023-07-12 22:59:09 RHOST 192.168.74.1                                         V
+```
+- Déverrouiller un compte manuellement
+```
+root@srv1:~# faillock --user mukil --reset
+```
+
+## DNS
+
+- [ ] Configurer le DNS avec plusieurs entrées (machine 1, machine 2, machine 3) et des forwarder
+
+Le DNS sous linux est ```bind9```, tapez cette commande pour l’installer :
+```
+apt install bind9
+```
+- Création d’une zone
+  
+Nous allons créer une zone pour le domaine ```iosolution.fr```.
+
+Nous allons créer une entrée de type A (renvoie une ou plusieurs adresses IPv4 pour un nom d'hôte donné) dans le fichier ```/etc/bind/db.iosolution.fr```:
+
+```
+cp -rp /bind/db.local /etc/bind/db.iosolution.fr
+```
+```
+vim /etc/bind/db.iosolution.fr
+```
+```
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     localhost. root.localhost. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      localhost.
+@       IN      A       127.0.0.1
+@       IN      AAAA    ::1
+
+srv1 A 192.168.74.198
+client1 A 192.168.74.212
+client2 A 192.168.74.214
+```
+
+- Création d’une zone « reverse »
+- 
+  Nous allons créer une zone reverse pour le domaine ``` iosolution.fr```. Dans mon cas, je vais utiliser le subnet ``` 192.168.74.0 ``` :
+```
+  cp -rp /etc/bind/db.127 /etc/bind/db.74.168.192
+```
+Nous allons créer une entrée de type PTR (Réalise l'inverse de l'enregistrement A ou AAAA : donne un nom de host (FQDN) pour une adresse IP.) dans le fichier ```/etc/bind/db.74.168.192```:
+```
+vim  /etc/bind/db.74.168.192
+```
+```
+;
+; BIND reverse data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     localhost. root.localhost. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      localhost.
+1.0.0   IN      PTR     localhost.
+198     IN      PTR     srv1.iosolution.fr
+212     IN      PTR     client1.iosolution.fr
+214     IN      PTR     client2.iosolution.fr
+```
+
+- Déclaration de nos zones dans le DNS
+  
+  Il faut déclarer notre nouveau domaine dans la configuration DNS :
+Créer le fichier ```/etc/bind/named.conf.iosolution.fr ``` afin de faire la déclaration de nos zones
+```
+vim /etc/bind/named.conf.iosolution.fr
+```
+```
+zone "iosolution.fr" {
+        type master;
+        file "/etc/bind/db.iosolution.fr";
+};
+zone "74.168.192.in-addr.arpa" {
+        type master;
+        file "/etc/bind/db.74.168.192";
+};
+```
+Enfin, il ne reste plus qu’a dire à BIND9 d’inclure notre fichier de configuration « named.conf.iosolution » dans la configuration DNS :
+Editer le fichier ```/etc/bind/named.conf ```:
+```
+vim /etc/bind/named.conf
+```
+```
+include "/etc/bind/named.conf.options";
+include "/etc/bind/named.conf.local";
+include "/etc/bind/named.conf.default-zones";
+include "/etc/bind/named.conf.iosolution.fr";
+```
+- Recharger la configuration DNS
+Une fois toutes les zones créent et déclarés, il faut recharger la configuration DNS afin que cela soit pris en compte :
+```
+service bind9 reload
+```
+- Configuration des forwarders
+  Editez le fichier ```/etc/bind/named.conf.options``` afin d’ajouter des forwarders (google dans notre exemple) :
+```
+  options {
+        directory "/var/cache/bind";
+
+        // If there is a firewall between you and nameservers you want
+        // to talk to, you may need to fix the firewall to allow multiple
+        // ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+        // If your ISP provided one or more IP addresses for stable
+        // nameservers, you probably want to use them as forwarders.
+        // Uncomment the following block, and insert the addresses replacing
+        // the all-0's placeholder.
+
+        forwarders {
+                8.8.8.8;
+                8.8.4.4;
+         };
+
+        //========================================================================
+        // If BIND logs error messages about the root key being expired,
+        // you will need to update your keys.  See https://www.isc.org/bind-keys
+        //========================================================================
+        dnssec-validation auto;
+
+        listen-on-v6 { any; };
+};
+```
+<img width="506" alt="Capture d’écran 2023-07-12 à 19 47 59" src="https://github.com/GMukilventhan/LPIC202/assets/90500004/fb9cacc1-3e16-46e1-9cd4-129035dac76f">
+
+
+
+## DHCP
+
+- [ ] Configurer le DHCP avec une entrée statique et un subnet
+
+- Installation du serveur DHCP
+  Pour installer  un serveur DHCP, nous allons installer le package  ```isc-dhcp-server``` qui est le serveur DHCP sur Ubuntu
+```
+  apt install isc-dhcp-server
+```
+- Création d’un subnet DHCP
+
+  C’est dans le fichier ```/etc/dhcp/dhcpd.conf  ``` qu’on va notre subnet sur lequel notre DHCP sera actif :
+```
+  subnet 192.168.74.0 netmask 255.255.255.0 {
+range 192.168.74.212 192.168.74.255;
+option routers 192.168.74.2;
+option domain-name-servers 192.168.74.198;
+}
+```
+
+- Réservation d’une IP dans le DHCP
+Il est possible de « provisionner » le DHCP pour réserver une IP à un host.
+cela, il faut créer l’entrée dans ``` /etc/dhcp/dhcpd.conf ``` comme ci-dessous :
+```
+host  client2 {
+hardware ethernet 00:0c:29:c7:72:7D;
+fixed-address 192.168.74.214;
+}
+```
+- Activation du DHCP
+```
+sudo service isc-dhcp-server enable 
+sudo service isc-dhcp-server restart
+sudo service isc-dhcp-server status
+```
+## TFTP
+
+- [ ] Installer le serveur TFTP et client
+
+- Serveur TFTP
+```
+apt install tftpd-hpa
+```
+- Client TFTP
+```
+apt install tftp-hpa
+```
+- Ajouter « -4 » dans « TFTP_OPTIONS » qui se trouve dans /etc/default/tftpd-hpa
+```
+vim /etc/default/tftpd-hpa
+```
+
+```
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/srv/tftp"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure -4"
+```
+- Création d’un fichier test dans le dossier TFTP
+```
+touch /srv/tftp/test.txt && echo « Ceci est un test TFTP » >> /srv/tftp/test.txt
+touch /srv/tftp/test.txt && echo « Ceci est un test TFTP projet 4SRC2  » >> /srv/tftp/projet.txt
+```
+- Attribuer les droits du dossier TFTP et son contenu
+```
+chgrp -R tftp /srv/tftp && chmod -R 755 /srv/tftp
+```
+```
+systemctl start tftpd-hpa
+```
+```
+systemctl enable tftpd-hpa
+```
+
+## Routes
+- [ ] Avoir des routes présentes et persistantes

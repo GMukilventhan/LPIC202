@@ -655,3 +655,18 @@ apt install net-tools -y
 ```
 route add -net 192.168.74.214 netmask 255.255.255.255 gw 192.168.74.198
 ```
+
+## VIM
+
+:q Quitter
+:q! quitter sans enregistrer
+:wq Enregistrer et quitter
+:x Enregistrer (seulement en cas de modification) et quitter
+
+yy Copier la ligne (4yy = 4 lignes)
+dd Couper la ligne (4dd = 4 lignes)
+p  Coller après (P = insérer avant)
+
+Rechercher un mot ( :/[mot_clef] )
+Afficher les numéros de ligne ( :set nu )
+Rechercher par numéro de ligne ( :[line_number] )

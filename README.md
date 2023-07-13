@@ -13,6 +13,19 @@
 
 - [ ] [Documentation AANSSI ]([https://docs.ansible.com/](https://www.ssi.gouv.fr/guide/recommandations-de-securite-relatives-a-un-systeme-gnulinux/))
 
+## Repartitions
+Tâche |Intervenants  |
+------  | -------    | 
+LVM | Maxime         |
+NTP | Théo           |
+IPTABLES | Théo      |
+PAM | Mohamed        |
+DNS | Mohamed        |
+DHCP | Mukil         |
+TFTP | Mukil         |
+Routes |  Maxime     |
+
+
 ## Description
 <img width="1192" alt="Capture d’écran 2023-07-12 à 23 50 25" src="https://github.com/GMukilventhan/LPIC202/assets/90500004/bec69c92-e532-491a-b68b-de8cebead8a8">
 
